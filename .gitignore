@@ -89,6 +89,10 @@ y.tab.c
 /verconf.h
 /web
 /yasmdata.rb
+/GPATH
+/GRTAGS
+/GSYMS
+/GTAGS
 
 # /benchmark/
 /benchmark/bmx_*.rb
