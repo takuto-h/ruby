@@ -754,7 +754,7 @@ static void token_info_pop(struct parser_params*, const char *token);
 	keyword__ENCODING__
 
 %token <id>   tIDENTIFIER tFID tGVAR tIVAR tCONSTANT tCVAR tLABEL
-%token <node> tINTEGER tFLOAT tSTRING_CONTENT tCHAR
+%token <node> tINTEGER tFLOAT tRATIONAL tSTRING_CONTENT tCHAR
 %token <node> tNTH_REF tBACK_REF
 %token <num>  tREGEXP_END
 
@@ -2120,6 +2120,15 @@ arg		: lhs '=' arg
 		    %*/
 		    }
 		| tUMINUS_NUM tFLOAT tPOW arg
+		    {
+		    /*%%%*/
+			$$ = NEW_CALL(call_bin_op($2, tPOW, $4), tUMINUS, 0);
+		    /*%
+			$$ = dispatch3(binary, $2, ripper_intern("**"), $4);
+			$$ = dispatch2(unary, ripper_intern("-@"), $$);
+		    %*/
+		    }
+		| tUMINUS_NUM tRATIONAL tPOW arg
 		    {
 		    /*%%%*/
 			$$ = NEW_CALL(call_bin_op($2, tPOW, $4), tUMINUS, 0);
@@ -4294,6 +4303,7 @@ dsym		: tSYMBEG xstring_contents tSTRING_END
 
 numeric 	: tINTEGER
 		| tFLOAT
+		| tRATIONAL
 		| tUMINUS_NUM tINTEGER	       %prec tLOWEST
 		    {
 		    /*%%%*/
@@ -4306,6 +4316,14 @@ numeric 	: tINTEGER
 		    {
 		    /*%%%*/
 			$$ = negate_lit($2);
+		    /*%
+			$$ = dispatch2(unary, ripper_intern("-@"), $2);
+		    %*/
+		    }
+		| tUMINUS_NUM tRATIONAL	       %prec tLOWEST
+		    {
+		    /*%%%*/
+                        $$ = NEW_CALL($2, tUMINUS, 0);
 		    /*%
 			$$ = dispatch2(unary, ripper_intern("-@"), $2);
 		    %*/
@@ -7583,7 +7601,6 @@ parser_yylex(struct parser_params *parser)
 	    }
 
 	  decode_num:
-	    pushback(c);
 	    if (nondigit) {
 		char tmp[30];
 	      trailing_uc:
@@ -7598,9 +7615,17 @@ parser_yylex(struct parser_params *parser)
 		    errno = 0;
 		}
                 set_yylval_literal(DBL2NUM(d));
+                pushback(c);
 		return tFLOAT;
 	    }
+            if (c == 'r') {
+                NODE *args = NEW_ARRAY(NEW_STR(rb_str_new_cstr(tok())));
+                NODE *fcall = NEW_FCALL(rb_intern("Rational"), args);
+                set_yylval_node(fcall);
+                return tRATIONAL;
+            }
 	    set_yylval_literal(rb_cstr_to_inum(tok(), 10, FALSE));
+            pushback(c);
 	    return tINTEGER;
 	}
 
