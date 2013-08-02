@@ -4333,7 +4333,7 @@ numeric 	: tINTEGER
                 | tUMINUS_NUM tRATIONAL	       %prec tLOWEST
                     {
                     /*%%%*/
-                        $$ = negate_lit($2);
+                        $$ = NEW_CALL($2, tUMINUS, 0);
                     /*%
                         $$ = dispatch2(unary, ripper_intern("-@"), $2);
                     %*/
@@ -4341,7 +4341,7 @@ numeric 	: tINTEGER
                 | tUMINUS_NUM tIMAGINARY       %prec tLOWEST
                     {
                     /*%%%*/
-                        $$ = negate_lit($2);
+                        $$ = NEW_CALL($2, tUMINUS, 0);
                     /*%
                         $$ = dispatch2(unary, ripper_intern("-@"), $2);
                     %*/
